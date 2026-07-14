@@ -105,7 +105,7 @@
 | **Azure VMs** | IaaS, controle total do SO | — |
 | **Availability Set** | Distribui VMs entre fault domains (3) e update domains (20) no mesmo datacenter | "falha de hardware local" |
 | **VM Scale Sets** | Grupo de VMs idênticas com autoscale | "escalar automaticamente" |
-| **App Service** | PaaS para web apps/APIs/backends mobile — Azure cuida de patches, SO e servidores, você foca só no código. Sempre rodando, cobra por hora | "hospedar site/API contínua" |
+| **App Service** | PaaS para web apps/APIs/backends/WebJobs/Background Tasks mobile — Azure cuida de patches, SO e servidores, você foca só no código. Sempre rodando, cobra por hora | "hospedar site/API contínua" |
 | **Azure Functions** | Serverless — executa código disparado por evento, você não gerencia servidor nenhum, cobra só pelo tempo de execução | "tarefa pontual por evento" |
 | **ACI** | 1 contêiner isolado, rápido | "1 contêiner simples" |
 | **AKS** | Orquestração de contêineres em escala | "múltiplos contêineres, microsserviços" |
@@ -154,6 +154,7 @@
 |---|---|---|
 | **NSG** | Regras por porta/IP, grátis | Porta específica (22, 80, 445) |
 | **Azure Firewall** | Stateful, FQDN, DNAT, threat intel, logs de auditoria | Precisa de recurso avançado que NSG não tem |
+| **Azure Policy** | Auditar, Negar, Modificar, Herdar configurações |
 
 | Balanceamento | Camada | Escopo | Use quando |
 |---|---|---|---|
@@ -194,7 +195,7 @@ Toda Storage do Azure vive dentro de uma **Storage Account** — o "contêiner" 
 | Cenário | Serviço |
 |---|---|
 | Fotos, vídeos, logs, backups genéricos, dados binários em massa | **Blob Storage** |
-| Compartilhamento de pasta de rede para vários usuários/VMs (like um "drive" corporativo) | **Azure Files** (SMB/NFS) |
+| Compartilhamento de pasta de rede para vários usuários/VMs (like um "drive" corporativo). Pode ser montado simultaneamente por diversas VMs e computadores utilizando protocolo SMB ou NFS. | **Azure Files** (SMB/NFS) |
 | Desacoplar comunicação entre partes de uma aplicação (fila de mensagens) | **Queue Storage** |
 | Dados simples chave-valor, sem necessidade de relacionamento, baixo custo | **Table Storage** |
 | Disco persistente para 1 VM específica (SO ou dados) | **Disk Storage** |
@@ -242,7 +243,7 @@ Toda Storage do Azure vive dentro de uma **Storage Account** — o "contêiner" 
 
 **Azure Key Vault:** cofre para 3 tipos de segredo — **Secrets** (senhas, connection strings, tokens), **Keys** (chaves de criptografia) e **Certificates** (SSL/TLS). Apps acessam via API (geralmente com Managed Identity) sem hardcodar credencial no código. Gatilho: "segredos, chaves, certificados".
 
-**RBAC = Role-Based Access Control** (não confundir com siglas inventadas). 3 componentes: **Função** (permissões) + **Atribuição** (vincula à identidade) + **Escopo** (onde vale).
+**RBAC = Role-Based Access Control** (não confundir com Azure Policy). 3 componentes: **Função** (permissões) + **Atribuição** (vincula à identidade) + **Escopo** (onde vale).
 
 | Função | Delega acesso? |
 |---|---|
@@ -370,7 +371,7 @@ Toda Storage do Azure vive dentro de uma **Storage Account** — o "contêiner" 
 | Serviço | Engine | Gatilho |
 |---|---|---|
 | **Azure SQL Database** | SQL Server | "T-SQL", "ACID", "integridade referencial" |
-| **SQL Managed Instance** | SQL Server (quase 100% compatível) | "lift-and-shift de SQL Server on-prem" |
+| **SQL Managed Instance** | SQL Server (oferece alta compatibilidade com SQL Server, facilitando migrações com poucas alterações) | "lift-and-shift de SQL Server on-prem" |
 | **Azure Database for MySQL/PostgreSQL** | Open-source | "código aberto", "MySQL", "PostgreSQL" |
 | ~~Azure Database for MariaDB~~ | Open-source | Em descontinuação (set/2025) |
 | **Cosmos DB** | NoSQL multi-modelo (SQL, Mongo, Cassandra, Gremlin, Table) | "RU/s", "multi-master", "JSON", "indexação automática", "SLA 99,999%" |
@@ -416,7 +417,7 @@ Toda Storage do Azure vive dentro de uma **Storage Account** — o "contêiner" 
 | Ferramenta | Quando |
 |---|---|
 | **AzCopy** | CLI para TBs entre Storage Accounts, automatizável em scripts |
-| **Azure Storage Explorer** | App gráfica (GUI) para navegar, subir/baixar e gerenciar Blob/Files/Queue/Table visualmente, sem linha de comando |
+| **Azure Storage Explorer** | App gráfica (GUI) para navegar, subir/baixar e gerenciar Blob/Files/Queue/Table visualmente, sem linha de comando. Também permite copiar arquivos entre Storage Accounts utilizando interface gráfica. |
 | **Azure File Sync** | Sincronizar pastas Windows on-prem ↔ Azure Files |
 | **Azure Data Box** | Internet lenta, 50TB+, dispositivo físico |
 | **Azure Migrate** | Discovery + avaliação de migração (não move dados sozinho) |
@@ -538,185 +539,392 @@ Toda Storage do Azure vive dentro de uma **Storage Account** — o "contêiner" 
 
 ---
 
-## 📘 Azure Container Apps
+# 📘 Azure Container Apps
 
-Executa aplicações em **containers** sem precisar gerenciar Kubernetes. A Azure cuida da infraestrutura e da escalabilidade automaticamente (inclusive até zero).
+Executa aplicações em containers **sem precisar gerenciar Kubernetes**. O Azure cuida da infraestrutura, da escalabilidade e do balanceamento automaticamente.
 
-**Gatilho da prova:** microsserviços, containers sem Kubernetes, serverless para containers.
+## Gatilhos da prova
+
+- Containers serverless
+- Microsserviços
+- Não quer gerenciar cluster Kubernetes
+- Escalar automaticamente até zero
+
+> Diferença:
+>
+> - **ACI** → executa um ou poucos containers isolados.
+> - **Container Apps** → aplicações modernas, microsserviços e escalabilidade automática.
+> - **AKS** → gerenciamento completo de clusters Kubernetes.
 
 ---
 
-## 📘 Azure Functions × Logic Apps
+# 📘 Azure Functions × Logic Apps
 
 | Azure Functions | Logic Apps |
 |----------------|------------|
-| Executa código | Fluxo visual (Low-code/No-code) |
-| Lógica personalizada | Integra serviços |
-| Disparada por eventos | Automatiza processos |
-| Requer programação | Não exige programação |
+| Executa código | Fluxos visuais (Low-code/No-code) |
+| Programação | Integração entre serviços |
+| Disparada por eventos | Automatização de processos |
+| Cobra por execução | Cobra pelas ações executadas |
 
-### Gatilhos da prova
+## Gatilhos da prova
 
-- **"Executar código"**, **"função"**, **"evento"** → **Azure Functions**
-- **"Fluxo"**, **"integração"**, **"Outlook → Teams → SharePoint"** → **Logic Apps**
+**Azure Functions**
+
+- Executar código
+- Evento
+- Serverless
+- Timer
+- HTTP Trigger
+
+**Logic Apps**
+
+- Fluxo de aprovação
+- Outlook → Teams → SharePoint
+- Integração
+- Automação sem programação
+
+> Resumindo:
+>
+> **Código → Functions**
+>
+> **Fluxo → Logic Apps**
 
 ---
 
-## 📘 Azure Firewall × Application Gateway
+# 📘 Azure Firewall × Application Gateway × Front Door
 
-| Azure Firewall | Application Gateway |
-|----------------|---------------------|
-| Protege a **rede (VNet)** | Gerencia e protege **aplicações Web** |
-| Camadas **3 e 4** (IP, portas, protocolos) | Camada **7** (HTTP/HTTPS) |
-| Filtra qualquer tipo de tráfego | Balanceia tráfego HTTP/HTTPS |
-| Controla entrada, saída e tráfego entre VNets | Pode utilizar **WAF** |
+| Serviço | Camada | Escopo | Quando usar |
+|---------|---------|---------|--------------|
+| Azure Firewall | L3/L4 | Rede | Proteger VNets |
+| Application Gateway | L7 | Regional | Aplicações Web |
+| Front Door | L7 | Global | Aplicações Web distribuídas mundialmente |
 
-### WAF (Web Application Firewall)
+## Azure Firewall
+
+Protege a rede.
+
+Recursos importantes:
+
+- Stateful Firewall
+- DNAT
+- FQDN Filtering
+- Threat Intelligence
+- Logs de auditoria
+
+### Gatilhos
+
+- Rede
+- VNet
+- Portas
+- Protocolos
+- DNAT
+- FQDN
+
+---
+
+## Application Gateway
+
+Balanceador HTTP/HTTPS regional.
+
+Possui suporte ao **WAF**.
+
+### Gatilhos
+
+- HTTP
+- HTTPS
+- URL Routing
+- Aplicações Web
+- WAF
+
+---
+
+## Front Door
+
+Balanceador HTTP/HTTPS global.
+
+Também possui WAF.
+
+Além disso:
+
+- CDN integrado
+- Failover global
+- Baixa latência mundial
+
+### Gatilhos
+
+- Multi-região
+- Global
+- CDN
+- WAF
+
+---
+
+## WAF
 
 Protege aplicações Web contra ataques como:
 
 - SQL Injection
 - Cross-Site Scripting (XSS)
+- Ataques do OWASP Top 10
 
-**Gatilho da prova:** proteção contra ataques Web → **WAF**.
+Sempre aparece junto do:
 
----
-
-## 📘 Azure Data Lake Storage
-
-É um **Blob Storage otimizado para Big Data e Analytics**.
-
-Diferença:
-
-- **Blob Storage:** armazenamento de arquivos.
-- **Data Lake Storage:** armazenamento para processamento de grandes volumes de dados por ferramentas analíticas (Spark, Databricks, Synapse).
+- Application Gateway
+- Front Door
 
 ---
 
-## 📘 Azure Data Factory
+# 📘 Azure Data Lake Storage
 
-Serviço utilizado para **integrar, mover e transformar dados** entre diferentes fontes.
+É uma extensão do Blob Storage voltada para Big Data.
 
-Cria **pipelines** de dados.
+Na prática:
 
-Exemplo:
+**Blob Storage + Namespace Hierárquico**
 
-SQL Server → Blob Storage → Data Lake → Azure SQL Database
+Foi criado para trabalhar com:
 
-**Gatilhos da prova:**
+- Spark
+- Databricks
+- Synapse
+- Hadoop
+
+## Diferença
+
+| Blob Storage | Data Lake |
+|---------------|-----------|
+| Arquivos em geral | Big Data |
+| Backup | Analytics |
+| Fotos | Data Science |
+| Vídeos | Machine Learning |
+
+### Gatilho
+
+Se falar apenas:
+
+- Arquivos
+- Imagens
+- Backup
+- Vídeos
+
+➡️ Blob Storage
+
+Se aparecer:
+
+- Big Data
+- Spark
+- Databricks
+- Analytics
+
+➡️ Data Lake
+
+---
+
+# 📘 Azure Data Factory
+
+Serviço responsável por mover, integrar e transformar dados.
+
+Sua unidade principal é o **Pipeline**.
+
+## Gatilhos
 
 - ETL
+- ELT
+- Pipeline
 - Migração de dados
 - Integração de dados
-- Pipeline
-
-→ **Azure Data Factory**
-
----
-
-## 📘 Azure Stream Analytics
-
-Processa dados **em tempo real**.
+- Orquestração
 
 Exemplo:
 
-Sensores IoT → Analisar temperatura → Gerar alerta.
+SQL Server
 
-**Gatilhos da prova:**
+↓
+
+Blob Storage
+
+↓
+
+Data Lake
+
+↓
+
+Azure SQL Database
+
+---
+
+# 📘 Azure Stream Analytics
+
+Processa dados em tempo real.
+
+Recebe eventos continuamente.
+
+Exemplos:
+
+- IoT
+- Sensores
+- Telemetria
+- Logs em tempo real
+
+## Gatilhos
 
 - Streaming
 - Tempo real
-- Eventos em tempo real
+- Eventos
+- IoT
+
+> Se a questão falar em "Pipeline", normalmente é **Data Factory**.
+>
+> Se falar em "tempo real", normalmente é **Stream Analytics**.
 
 ---
 
-## 📘 Domain Controller
+# 📘 Domain Controller
 
-Servidor responsável por autenticar usuários e computadores em um domínio.
+É o servidor responsável por autenticar usuários e computadores em um domínio Active Directory.
 
 Armazena:
 
 - Usuários
 - Senhas
+- Computadores
 - Grupos
-- Políticas (Group Policy)
+- Group Policies
 
-No Azure, o **Microsoft Entra Domain Services** fornece esses serviços de domínio de forma gerenciada.
+No Azure quem fornece isso de forma gerenciada é o:
+
+**Microsoft Entra Domain Services**
+
+Você não precisa instalar nem manter Controladores de Domínio.
 
 ---
 
-## 📘 O que afeta os custos da Azure?
+# 📘 O que afeta os custos da Azure?
+
+O preço de um recurso depende principalmente de:
 
 - Região
 - Tipo do recurso
-- SKU
+- SKU (camada/plano)
 - Tempo de utilização
-- Quantidade utilizada
-- Transferência de **saída (Egress)**
+- Quantidade consumida
+- Transferência de saída (Egress)
 
-### Transferência de dados
+## Transferência de dados
 
-- ✅ **Entrada (Ingress):** normalmente gratuita.
-- 💲 **Saída (Egress):** normalmente cobrada.
+- ✅ **Ingress (Entrada):** normalmente gratuita.
+- 💲 **Egress (Saída):** normalmente cobrada.
+- 🔄 Entre regiões diferentes também pode haver cobrança.
 
----
+### Gatilhos da prova
 
-## 📘 Reservations × Spot VMs
-
-| Reservations | Spot VMs |
-|---------------|-----------|
-| Desconto por compromisso de 1 ou 3 anos | Usa capacidade ociosa da Azure |
-| Não são interrompidas | Podem ser removidas a qualquer momento |
-| Ideal para produção | Ideal para testes e cargas interrompíveis |
+- "Transferência para a Azure" → Ingress (grátis)
+- "Transferência da Azure para Internet" → Egress (cobrado)
 
 ---
 
-## 📘 Azure Migrate × TCO Calculator
+# 📘 Reservations × Savings Plans × Spot VMs
 
-| Azure Migrate | TCO Calculator |
-|----------------|----------------|
-| Migra recursos para a Azure | Compara custos entre on-premises e Azure |
-| Descobre e avalia servidores | Estima economia |
-| Planejamento da migração | Planejamento financeiro |
+| Serviço | Quando usar | Desconto | Observação |
+|----------|-------------|-----------|------------|
+| Reservations | Uso previsível por 1 ou 3 anos | Até 72% | Compromisso com SKU/região |
+| Savings Plan | Uso previsível, mas flexível | Até 65% | Compromisso de gasto por hora |
+| Spot VMs | Testes e cargas interrompíveis | Até 90% | Pode ser interrompida pelo Azure |
+
+### Gatilhos
+
+- Produção por longo prazo → Reservations
+- Produção com mais flexibilidade → Savings Plan
+- Ambiente temporário → Spot VM
 
 ---
 
-## 📘 Azure DNS × Traffic Manager
+# 📘 Azure Migrate × TCO Calculator × Pricing Calculator
+
+| Serviço | Função |
+|----------|--------|
+| Azure Migrate | Descobre, avalia e migra recursos |
+| TCO Calculator | Compara custos On-Premises × Azure |
+| Pricing Calculator | Estima quanto um ambiente Azure irá custar |
+
+### Gatilhos
+
+**Azure Migrate**
+
+- Discovery
+- Avaliação
+- Migração
+- Lift-and-shift
+
+**Pricing Calculator**
+
+- Quanto vai custar?
+- Antes de criar
+
+**TCO Calculator**
+
+- Vale a pena migrar?
+- Comparação financeira
+
+---
+
+# 📘 Azure DNS × Traffic Manager
 
 | Azure DNS | Traffic Manager |
 |------------|----------------|
-| Hospeda zonas DNS | Distribui usuários entre regiões |
-| Resolve nomes de domínio | Balanceamento por DNS |
+| Resolve nomes DNS | Distribui usuários entre regiões |
+| Hospeda zonas DNS | Balanceamento baseado em DNS |
 | Não faz failover | Faz failover automaticamente |
 
-### Gatilho da prova
+### Gatilhos
 
-- **Resolver nomes** → Azure DNS.
-- **Escolher a melhor região / Failover** → Traffic Manager.
+Resolver nomes
+
+➡️ Azure DNS
+
+Escolher a melhor região
+
+➡️ Traffic Manager
+
+Failover global
+
+➡️ Traffic Manager
 
 ---
 
-## 📘 Azure Resource Manager (ARM)
+# 📘 Azure Resource Manager (ARM)
 
-O **Azure Resource Manager (ARM)** é o serviço responsável por criar, atualizar e excluir recursos na Azure.
+O ARM é o serviço responsável por criar, atualizar e excluir recursos na Azure.
 
-Tudo passa pelo ARM:
+**Tudo passa pelo ARM:**
 
-- Portal Azure
+- Azure Portal
 - Azure CLI
-- PowerShell
+- Azure PowerShell
 - REST API
 - ARM Templates
 - Bicep
 
-O ARM verifica:
+Antes de executar uma operação o ARM verifica:
 
 - Permissões (RBAC)
 - Azure Policy
+- Resource Locks
 - Resource Group
 - Região
 
-Só então executa a operação.
+Só depois cria ou altera o recurso.
+
+### ARM Templates × Bicep
+
+| ARM Template | Bicep |
+|--------------|-------|
+| JSON | Linguagem simplificada |
+| Difícil de escrever | Muito mais legível |
+| Motor de implantação | Compila para ARM Template |
+
+> O motor continua sendo o ARM. O Bicep apenas gera ARM Templates.
 
 ---
 
@@ -724,64 +932,75 @@ Só então executa a operação.
 
 | Comparação | Diferença |
 |------------|-----------|
-| NSG × Azure Firewall | NSG filtra portas/IP; Firewall oferece proteção avançada da rede. |
+| NSG × Azure Firewall | NSG controla portas/IP; Firewall oferece proteção avançada da rede. |
 | Azure Firewall × Application Gateway | Firewall protege a rede; Application Gateway protege aplicações Web. |
-| Application Gateway × Front Door | App Gateway é regional; Front Door é global. |
-| Azure DNS × Traffic Manager | DNS resolve nomes; Traffic Manager escolhe a melhor região e faz failover. |
-| Blob Storage × Data Lake | Blob armazena arquivos; Data Lake é otimizado para Big Data e Analytics. |
-| Blob Storage × Azure Files | Blob = objetos; Files = compartilhamento SMB/NFS. |
+| Application Gateway × Front Door | Regional × Global. |
+| Azure DNS × Traffic Manager | Resolver nomes × Escolher a melhor região. |
+| Blob Storage × Azure Files | Objetos × Compartilhamento SMB/NFS. |
+| Blob Storage × Data Lake | Arquivos × Big Data. |
 | Azure Functions × Logic Apps | Código × Fluxo de trabalho. |
 | VM Scale Sets × Availability Set | Escalabilidade × Alta disponibilidade. |
-| Azure SQL Database × SQL Managed Instance | Banco PaaS × Compatibilidade quase total com SQL Server. |
+| Azure SQL Database × SQL Managed Instance | Banco PaaS × Migração quase transparente do SQL Server. |
+| SQL Database × Azure Database for PostgreSQL/MySQL | SQL Server × Bancos Open Source. |
 | Management Group × Resource Group | Organiza Subscriptions × Organiza Recursos. |
-| ARM × Bicep | Motor de gerenciamento × Linguagem de IaC. |
-| Azure Migrate × TCO Calculator | Migração × Comparação de custos. |
+| ARM × Bicep | Motor × Linguagem IaC. |
+| Azure Migrate × Pricing Calculator | Migração × Estimativa de custos. |
+| Azure Migrate × TCO Calculator | Migração × Comparação financeira. |
+| AzCopy × Storage Explorer | CLI para grandes transferências × Interface gráfica para gerenciamento. |
+| Azure Backup × Site Recovery | Backup de dados × Recuperação de desastre. |
+| Azure Monitor × Application Insights | Todos os recursos × Aplicações. |
+| Activity Log × Resource Logs | Quem fez × O que aconteceu. |
 
 ---
 
 # 🚨 Macetes de Última Hora
 
-- **Resource Group** → Organiza recursos.
 - **Management Group** → Organiza Subscriptions.
 - **Subscription** → Cobrança.
-- **Tags** → Organização e controle de custos.
+- **Resource Group** → Organiza Recursos.
+- **Tags** → Organização e custos.
 - **RBAC** → Quem pode fazer.
-- **Azure Policy** → O que pode ser feito.
-- **Resource Locks** → Impedem alteração ou exclusão.
-- **NSG** → Filtra portas e IPs.
+- **Azure Policy** → O que pode fazer.
+- **Resource Locks** → Impede alteração/exclusão.
+- **NSG** → Portas e IPs.
 - **Azure Firewall** → Proteção avançada da rede.
-- **Application Gateway** → Balanceador para aplicações Web.
-- **WAF** → Protege aplicações Web contra ataques.
-- **Traffic Manager** → DNS global com failover.
-- **Front Door** → Balanceamento HTTP/HTTPS global.
-- **Azure Data Factory** → Integra e move dados.
-- **Azure Stream Analytics** → Processa dados em tempo real.
-- **Azure Functions** → Executa código por evento.
-- **Logic Apps** → Automatiza fluxos.
-- **VM Scale Sets** → Escala automaticamente um grupo de VMs.
+- **Application Gateway** → Balanceador Web regional.
+- **Front Door** → Balanceador Web global.
+- **Traffic Manager** → DNS + Failover.
+- **Azure DNS** → Resolver nomes.
+- **Azure Data Factory** → ETL/Pipeline.
+- **Stream Analytics** → Tempo real.
+- **Azure Functions** → Código por evento.
+- **Logic Apps** → Fluxos.
+- **Container Apps** → Containers serverless.
+- **VM Scale Sets** → Escalabilidade.
+- **Availability Set** → Alta disponibilidade.
 - **Reservations** → Desconto por compromisso.
-- **Spot VMs** → Capacidade ociosa com baixo custo.
-- **Azure Migrate** → Migração para Azure.
-- **TCO Calculator** → Compara custos de on-premises x Azure.
+- **Savings Plan** → Desconto flexível.
+- **Spot VM** → Baixo custo com interrupção.
+- **Azure Migrate** → Migração.
+- **Pricing Calculator** → Estimar custos.
+- **TCO Calculator** → Comparar custos.
 - **ARM** → Gerencia todos os recursos da Azure.
-
 ---
 
 # 📘 Logs e Monitoramento
 
-Os serviços de monitoramento costumam ser confundidos na prova. A principal diferença é **o que cada um monitora**.
+Os serviços de monitoramento costumam aparecer juntos na prova. A principal diferença é **o que cada um monitora**.
 
-| Serviço | O que monitora | Quando usar |
-|---------|----------------|-------------|
-| **Azure Monitor** | Todos os recursos da Azure | Monitoramento geral (métricas, logs e alertas) |
-| **Log Analytics** | Logs coletados pelo Azure Monitor | Consultar e analisar logs usando KQL |
-| **Activity Log** | Ações administrativas na Azure | Descobrir quem criou, alterou ou excluiu recursos |
-| **Resource Logs (Diagnostic Logs)** | Eventos de um recurso específico | Ver o que aconteceu dentro de um recurso |
-| **Application Insights** | Aplicações | Monitorar desempenho, erros e telemetria |
+| Serviço | O que faz | Gatilho da prova |
+|----------|-----------|------------------|
+| **Azure Monitor** | Plataforma central que coleta métricas, logs e gera alertas | "Monitorar recursos", "CPU", "alertas" |
+| **Log Analytics** | Workspace onde os logs são armazenados e consultados com KQL | "Consultar logs", "KQL", "pesquisar eventos" |
+| **Activity Log** | Registra ações administrativas na Subscription | "Quem criou?", "Quem excluiu?", "Quem alterou?" |
+| **Resource Logs (Diagnostic Logs)** | Eventos internos gerados por um recurso específico | "O que aconteceu dentro do recurso?" |
+| **Application Insights** | Monitora aplicações Web e APIs | "Aplicação lenta", "exceções", "telemetria" |
+| **Service Health** | Informa problemas na própria plataforma Azure | "Falha da Microsoft", "manutenção", "incidente regional" |
+| **Azure Advisor** | Recomenda melhorias para seus recursos | "Boas práticas", "economizar", "otimização" |
 
 ---
 
-## 📊 Azure Monitor
+# 📊 Azure Monitor
 
 É o serviço central de monitoramento da Azure.
 
@@ -791,95 +1010,229 @@ Ele coleta:
 - Logs
 - Alertas
 
-**Pense nele como o "hub" de monitoramento.**
+Pode monitorar praticamente qualquer recurso do Azure.
+
+Além disso, envia dados para o **Log Analytics Workspace**, onde eles podem ser consultados.
+
+### Azure Monitor Alerts
+
+Permite disparar automaticamente:
+
+- Email
+- SMS
+- Push
+- Webhook
+- Azure Function
+- Logic App
+
+Sempre que uma métrica ou log atender uma condição.
+
+Exemplo:
+
+CPU > 90% por 5 minutos
+
+↓
+
+Enviar alerta.
+
+### Gatilhos
+
+- CPU
+- Memória
+- Métricas
+- Alertas
+- Monitoramento geral
+
+➡️ Azure Monitor
 
 ---
 
-## 🔍 Log Analytics
+# 🔍 Log Analytics
 
-É o serviço utilizado para **consultar e analisar os logs** coletados pelo Azure Monitor.
+É o serviço responsável por armazenar e consultar os logs coletados pelo Azure Monitor.
 
-Utiliza a linguagem **KQL (Kusto Query Language)**.
+Utiliza:
 
-### Gatilho da prova
+**KQL (Kusto Query Language)**
 
-- Consultar logs.
-- Pesquisar eventos.
-- Executar consultas KQL.
+Permite:
 
-➡️ **Log Analytics**
+- Pesquisar eventos
+- Correlacionar logs
+- Criar dashboards
+- Investigar problemas
+
+### Gatilhos
+
+- KQL
+- Consultar logs
+- Workspace
+- Pesquisa
+
+➡️ Log Analytics
 
 ---
 
-## 📋 Activity Log
+# 📋 Activity Log
 
-Registra todas as **ações administrativas** realizadas na assinatura da Azure.
+Registra todas as operações administrativas realizadas na assinatura Azure.
 
 Exemplos:
 
-- Criar uma Máquina Virtual.
-- Excluir um Storage Account.
-- Alterar um NSG.
-- Criar um Resource Group.
+- Criou VM
+- Excluiu Storage
+- Alterou NSG
+- Criou Resource Group
+- Alterou RBAC
 
-### Gatilho da prova
+### Gatilhos
 
-"Quem criou?", "Quem alterou?", "Quem excluiu?"
+- Quem criou?
+- Quem alterou?
+- Quem excluiu?
+- Auditoria administrativa
 
-➡️ **Activity Log**
+➡️ Activity Log
 
 ---
 
-## 📦 Resource Logs (Diagnostic Logs)
+# 📦 Resource Logs (Diagnostic Logs)
 
-Registram eventos gerados por **um recurso específico**.
+Registram eventos internos produzidos por um recurso específico.
 
 Exemplos:
 
-- Azure Firewall bloqueou uma conexão.
-- Key Vault recebeu uma tentativa de acesso.
-- Storage Account recebeu uma solicitação.
-- Application Gateway registrou uma requisição.
+- Firewall bloqueou uma conexão.
+- Key Vault recebeu tentativa de acesso.
+- Storage recebeu requisição.
+- Application Gateway registrou uma chamada.
 
-### Gatilho da prova
+### Gatilhos
 
-"O que aconteceu dentro do recurso?"
+- O que aconteceu dentro do recurso?
+- Logs do Firewall
+- Logs do Storage
+- Logs do Key Vault
 
-➡️ **Resource Logs**
+➡️ Resource Logs
 
 ---
 
-## 📱 Application Insights
+# 📱 Application Insights
 
-Monitora aplicações.
+Especializado em monitorar aplicações.
 
-Coleta informações como:
+Coleta automaticamente:
 
 - Tempo de resposta
 - Número de requisições
-- Exceções
 - Dependências
+- Exceções
 - Disponibilidade
+- Performance
 
-Ideal para aplicações Web e APIs.
+Ideal para:
 
-### Gatilho da prova
+- APIs
+- Aplicações Web
+- Microsserviços
 
-"A aplicação está lenta."
+### Gatilhos
 
-"Quero identificar erros da API."
+- API lenta
+- Erros da aplicação
+- Exceções
+- Telemetria
+- Performance
 
-➡️ **Application Insights**
+➡️ Application Insights
+
+---
+
+# 🌍 Service Health
+
+Mostra problemas da própria infraestrutura da Microsoft.
+
+As notificações são divididas em três categorias:
+
+- **Service Issues** → Falhas ou indisponibilidades.
+- **Planned Maintenance** → Manutenções programadas.
+- **Health Advisories** → Avisos importantes (mudanças, aposentadoria de serviços, etc.).
+
+### Gatilhos
+
+- A Azure caiu.
+- Problema em uma região.
+- Manutenção programada.
+- Incidente da Microsoft.
+
+➡️ Service Health
+
+---
+
+# 💡 Azure Advisor
+
+Analisa seus recursos e gera recomendações em cinco categorias:
+
+- 💲 Custo
+- 🔒 Segurança
+- ⚡ Desempenho
+- ❤️ Confiabilidade
+- ⚙️ Excelência Operacional
+
+### Como diferenciar
+
+**Custo**
+- Recursos subutilizados
+- Redimensionamento
+- Economia
+
+**Segurança**
+- Secure Score
+- Recomendações do Defender
+
+**Confiabilidade**
+- Alta disponibilidade
+- Backup
+- Redundância
+
+**Desempenho**
+- Gargalos
+- Latência
+- Performance
+
+**Excelência Operacional**
+- Boas práticas
+- Governança
+- Automação
+- Configuração
+
+### Gatilhos
+
+- Melhorar ambiente
+- Recomendações
+- Boas práticas
+- Otimização
+
+➡️ Azure Advisor
 
 ---
 
 # 🎯 Como decorar
 
-- 📊 **Azure Monitor** → Monitora tudo.
-- 🔍 **Log Analytics** → Consulta logs (KQL).
-- 👤 **Activity Log** → Quem fez o quê.
-- 📦 **Resource Logs** → O que aconteceu dentro do recurso.
-- 📱 **Application Insights** → Saúde e desempenho da aplicação.
+📊 **Azure Monitor** → Monitora tudo.
+
+🔍 **Log Analytics** → Consulta os logs (KQL).
+
+👤 **Activity Log** → Quem fez o quê.
+
+📦 **Resource Logs** → O que aconteceu dentro do recurso.
+
+📱 **Application Insights** → Saúde da aplicação.
+
+🌍 **Service Health** → Saúde da plataforma Azure.
+
+💡 **Advisor** → Recomenda melhorias.
 
 ---
 
@@ -887,14 +1240,21 @@ Ideal para aplicações Web e APIs.
 
 | Comparação | Diferença |
 |------------|-----------|
-| **Azure Monitor × Log Analytics** | Monitor coleta dados; Log Analytics consulta os logs. |
-| **Activity Log × Resource Logs** | Activity Log registra ações administrativas; Resource Logs registram eventos do recurso. |
-| **Azure Monitor × Application Insights** | Azure Monitor monitora qualquer recurso; Application Insights monitora aplicações. |
+| Azure Monitor × Log Analytics | Monitor coleta dados; Log Analytics consulta os logs. |
+| Activity Log × Resource Logs | Activity Log registra ações administrativas; Resource Logs registram eventos do recurso. |
+| Azure Monitor × Application Insights | Azure Monitor monitora qualquer recurso; Application Insights monitora aplicações. |
+| Service Health × Azure Monitor | Service Health monitora a plataforma Azure; Azure Monitor monitora seus recursos. |
+| Azure Monitor Alerts × Application Insights | Alerts notificam automaticamente; Application Insights coleta telemetria da aplicação. |
 
-> 💡 **Macete da prova:**
->
-> - **Quem fez?** → **Activity Log**
-> - **O que aconteceu no recurso?** → **Resource Logs**
-> - **Consultar logs?** → **Log Analytics**
-> - **Monitorar aplicação?** → **Application Insights**
-> - **Monitoramento geral?** → **Azure Monitor**
+---
+
+# 💡 Macete da prova
+
+- **Quem fez?** → **Activity Log**
+- **O que aconteceu no recurso?** → **Resource Logs**
+- **Consultar logs?** → **Log Analytics**
+- **KQL?** → **Log Analytics**
+- **Aplicação lenta?** → **Application Insights**
+- **CPU, memória e alertas?** → **Azure Monitor**
+- **Problema na Azure?** → **Service Health**
+- **Melhorar o ambiente?** → **Advisor**

@@ -13,6 +13,10 @@ Simulados interativos e gratuitos para a certificação **Microsoft Azure Fundam
   - **Gerenciamento e Governança** (Domínio 3) — 30 questões sorteadas
   - **Simulado Geral** — 70 sorteadas de todos os domínios (no máximo 2 de escala vertical/horizontal; Data Lake, Data Factory, Management Groups e Resource Groups sempre entram)
   - **Banco Completo** — todas as questões do banco, embaralhadas
+- **Simulado Personalizado:** Crie um simulado sob medida selecionando quais domínios da prova quer praticar e a quantidade de questões. Escolha entre 3 métodos de distribuição das questões:
+  - *Totalmente Aleatória:* Mistura todas as questões das seções escolhidas livremente.
+  - *Igualitária / Balanceada:* Garante divisões com quantidades iguais de questões para cada seção selecionada.
+  - *Carga Oficial da Prova:* Distribui as questões proporcionalmente aos pesos reais da prova oficial da Microsoft (Conceitos: 28%, Arquitetura: 37%, Governança: 35%).
 - **Dois modos:** *Treino* (feedback e explicação na hora) e *Prática* (prova, resultado só no fim).
 - **Cronômetro** e **navegador de questões**.
 - **Marcar para revisar depois** (☆), igual à prova oficial — as marcadas ficam destacadas e podem ser revisadas no fim.

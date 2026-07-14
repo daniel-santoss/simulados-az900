@@ -2,7 +2,18 @@
 
 Simulados interativos, gratuitos e em português (Brasil) para a certificação **Microsoft Azure Fundamentals (AZ-900)**. Feito para estudar de verdade: além de praticar, você acompanha seu progresso detalhado por seção e histórico de tentativas.
 
-> ⚠️ **Aviso:** Material de estudo **não oficial**, sem qualquer vínculo com a Microsoft. A pontuação de corte (70%) é apenas uma referência para orientar seus estudos.
+> ⚠️ **Aviso:** Material de estudo **não oficial**, sem qualquer vínculo com a Microsoft. As questões deste projeto foram criadas com base nos objetivos de estudo da certificação AZ-900 e servem como preparação e prática. Na prova oficial, as perguntas podem ser apresentadas de forma diferente, com outros cenários, abordagens e alternativas. O objetivo deste simulado é ajudar você a compreender os conceitos cobrados e se familiarizar com o estilo das questões. A pontuação de corte (70%) é apenas uma referência para orientar seus estudos.
+
+## 📚 Sobre as Questões
+
+As questões foram elaboradas com auxílio de Inteligência Artificial (Claude Code) e revisadas/estruturadas com base nos objetivos de estudo da certificação **Microsoft Azure Fundamentals (AZ-900)**.
+
+- As perguntas podem variar em formato e abordagem em relação à prova oficial.
+- A prova real pode apresentar cenários, exemplos práticos e alternativas diferentes.
+- O objetivo do simulado não é decorar respostas, mas desenvolver o entendimento dos conceitos fundamentais do Azure.
+
+Use este material como uma ferramenta de revisão e preparação complementar aos conteúdos oficiais de estudo.
+
 
 ## ✨ Principais Recursos
 

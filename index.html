@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AZ-900 Simulados · Estudo interativo</title>
+  <meta name="description" content="Simulados interativos gratuitos para a certificação Microsoft Azure Fundamentals (AZ-900), em português (Brasil)." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="hrow">
+        <div class="brand" id="homeBtn"><h1>AZ-900 Simulados</h1><span class="tag">Azure Fundamentals</span></div>
+        <div class="htools" id="htools"></div>
+      </div>
+      <div id="hbar"></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div id="app"></div>
+    <footer class="legend" style="margin-top:28px;flex-direction:column;gap:4px;text-align:center">
+      <span>Material de estudo <b>não oficial</b>, sem vínculo com a Microsoft. As pontuações (corte em 70%) são apenas referência.</span>
+      <span>Contribuições e sugestões são bem-vindas — abra uma issue ou pull request.</span>
+    </footer>
+  </div>
+
+  <!-- questions.js define window.POOL, window.SIMULADOS e window.DOMAINS -->
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

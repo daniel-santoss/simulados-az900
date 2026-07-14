@@ -192,31 +192,73 @@
 
   /* ---------- Simulado personalizado ---------- */
   function openCustom() { state.view = "custom"; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
-  function customTopics() {
-    const m = {}; DOMORDER.forEach((d) => (m[d] = []));
-    const seen = {};
-    POOL.forEach((q) => { const d = q.domain, k = q.k || "Outros", key = d + "||" + k; if (!seen[key]) { seen[key] = { d, k, n: 0 }; m[d].push(seen[key]); } seen[key].n++; });
-    DOMORDER.forEach((d) => m[d].sort((a, b) => a.k.localeCompare(b.k, "pt")));
-    return m;
-  }
   function renderCustom() {
     if (state.tick) clearInterval(state.tick);
-    const topics = customTopics();
+    
+    const counts = {};
+    DOMORDER.forEach((d) => {
+      counts[d] = POOL.filter((q) => q.domain === d).length;
+    });
+
     const groups = DOMORDER.map((d) => {
-      const items = topics[d].map((t) => '<label class="topic-chk"><input type="checkbox" class="tchk" data-key="' + (d + "||" + t.k) + '" checked> <span>' + t.k + '</span> <span class="cnt">' + t.n + "</span></label>").join("");
-      return '<div class="topic-group"><div class="tghead"><h4><span class="domdot" style="background:' + DOMCOLOR[d] + '"></span>' + DOMAINS[d] + '</h4><button class="grouptoggle" data-group="' + d + '">marcar/desmarcar todos</button></div><div class="topic-list">' + items + "</div></div>";
+      return '<label class="domain-chk-card">' +
+        '<input type="checkbox" class="dchk" data-domain="' + d + '" checked>' +
+        '<div class="dchk-info">' +
+          '<h4><span class="domdot" style="background:' + DOMCOLOR[d] + '"></span>' + DOMAINS[d] + '</h4>' +
+          '<span class="cnt">' + counts[d] + ' questões disponíveis</span>' +
+        '</div>' +
+      '</label>';
     }).join("");
+
     app().innerHTML =
-      '<div class="hub-intro"><h2>Simulado Personalizado</h2><p>Escolha os tópicos e a quantidade de questões. Só entram questões dos tópicos marcados.</p></div>' +
-      '<div class="custom-cfg">' + groups +
-      '<div class="cfg-row"><label for="qtd">Quantas questões?</label><input type="range" id="qtdRange" min="1" max="50" value="20"><input type="number" id="qtd" min="1" value="20"></div>' +
+      '<div class="hub-intro"><h2>Simulado Personalizado</h2><p>Escolha os domínios e a distribuição das questões para sua prática.</p></div>' +
+      '<div class="custom-cfg">' +
+      '<div class="domain-selection">' + groups + '</div>' +
+      
+      '<span class="cfg-group-title">Distribuição das questões</span>' +
+      '<div class="dist-options">' +
+        '<label class="dist-opt">' +
+          '<input type="radio" name="distMode" value="aleatoria" checked>' +
+          '<div class="dist-opt-info">' +
+            '<b>Totalmente Aleatória</b>' +
+            '<span>Mistura todas as questões das seções marcadas de forma livre.</span>' +
+          '</div>' +
+        '</label>' +
+        '<label class="dist-opt">' +
+          '<input type="radio" name="distMode" value="igualitaria">' +
+          '<div class="dist-opt-info">' +
+            '<b>Igualitária / Balanceada</b>' +
+            '<span>Garante divisão de quantidade idêntica entre as seções que você escolheu.</span>' +
+          '</div>' +
+        '</label>' +
+        '<label class="dist-opt">' +
+          '<input type="radio" name="distMode" value="oficial">' +
+          '<div class="dist-opt-info">' +
+            '<b>Carga Oficial da Prova</b>' +
+            '<span>Aplica proporções aproximadas da prova oficial (Conceitos: 28%, Arquitetura: 37%, Governança: 35%).</span>' +
+          '</div>' +
+        '</label>' +
+      '</div>' +
+
+      '<div class="cfg-row" style="margin-top:20px"><label for="qtd">Quantas questões?</label><input type="range" id="qtdRange" min="1" max="50" value="20"><input type="number" id="qtd" min="1" value="20"></div>' +
       '<div class="avail" id="avail"></div>' +
       '<div class="controls"><button class="btn ghost" id="cCancel">← Voltar</button><div class="spacer"></div><button class="btn primary" id="cStart">Iniciar simulado</button></div>' +
       "</div>";
-    const selectedKeys = () => { const s = new Set(); app().querySelectorAll(".tchk:checked").forEach((c) => s.add(c.dataset.key)); return s; };
+
+    const selectedDomains = () => {
+      const s = new Set();
+      app().querySelectorAll(".dchk:checked").forEach((c) => s.add(c.dataset.domain));
+      return s;
+    };
+
+    const getSelectedDistMode = () => {
+      const checked = app().querySelector('input[name="distMode"]:checked');
+      return checked ? checked.value : "aleatoria";
+    };
+
     const upd = () => {
-      const sel = selectedKeys();
-      const avail = POOL.filter((q) => sel.has(q.domain + "||" + (q.k || "Outros"))).length;
+      const sel = selectedDomains();
+      const avail = POOL.filter((q) => sel.has(q.domain)).length;
       const range = $("#qtdRange"), num = $("#qtd");
       range.max = Math.max(1, avail);
       if (+num.value > avail) num.value = avail || 1;
@@ -225,25 +267,89 @@
       $("#avail").innerHTML = "<b>" + avail + "</b> questões disponíveis com esta seleção. O simulado usará <b>" + Math.min(+num.value, avail) + "</b>.";
       $("#cStart").disabled = avail === 0;
     };
-    app().querySelectorAll(".tchk").forEach((c) => (c.onchange = upd));
-    app().querySelectorAll(".grouptoggle").forEach((b) => (b.onclick = () => {
-      const boxes = app().querySelectorAll('.tchk[data-key^="' + b.dataset.group + '||"]');
-      const anyOn = Array.from(boxes).some((x) => x.checked);
-      boxes.forEach((x) => (x.checked = !anyOn)); upd();
-    }));
+
+    app().querySelectorAll(".dchk").forEach((c) => (c.onchange = upd));
     $("#qtdRange").oninput = () => { $("#qtd").value = $("#qtdRange").value; upd(); };
     $("#qtd").oninput = upd;
     $("#cCancel").onclick = () => { state.view = "hub"; render(); };
-    $("#cStart").onclick = () => startCustom(selectedKeys(), +$("#qtd").value);
+    $("#cStart").onclick = () => startCustom(selectedDomains(), +$("#qtd").value, getSelectedDistMode());
     upd();
     renderChrome();
   }
-  function startCustom(sel, n) {
-    const matches = POOL.filter((q) => sel.has(q.domain + "||" + (q.k || "Outros")));
-    if (!matches.length) return;
-    n = Math.max(1, Math.min(n || matches.length, matches.length));
+  function startCustom(sel, n, distMode) {
+    const selectedList = Array.from(sel);
+    if (!selectedList.length) return;
+
+    let finalQuestions = [];
+
+    if (distMode === "aleatoria") {
+      const matches = POOL.filter((q) => sel.has(q.domain));
+      n = Math.max(1, Math.min(n || matches.length, matches.length));
+      finalQuestions = shuffle(matches.slice()).slice(0, n);
+    } else {
+      const poolByDomain = {};
+      selectedList.forEach(d => {
+        poolByDomain[d] = shuffle(POOL.filter(q => q.domain === d).slice());
+      });
+
+      let weights = {};
+      if (distMode === "oficial") {
+        const baseWeights = { conceitos: 0.28, arquitetura: 0.37, governanca: 0.35 };
+        let sumWeights = 0;
+        selectedList.forEach(d => { sumWeights += baseWeights[d] || 0; });
+        selectedList.forEach(d => {
+          weights[d] = (baseWeights[d] || 0) / sumWeights;
+        });
+      } else {
+        selectedList.forEach(d => {
+          weights[d] = 1 / selectedList.length;
+        });
+      }
+
+      n = Math.max(1, n);
+
+      let targets = {};
+      let allocated = 0;
+      selectedList.forEach(d => {
+        let target = Math.round(weights[d] * n);
+        target = Math.min(target, poolByDomain[d].length);
+        targets[d] = target;
+        allocated += target;
+      });
+
+      let diff = n - allocated;
+      if (diff !== 0) {
+        const sortedDomains = selectedList.slice().sort((a, b) => weights[b] - weights[a]);
+        if (diff > 0) {
+          for (let i = 0; i < sortedDomains.length && diff > 0; i++) {
+            const d = sortedDomains[i];
+            const available = poolByDomain[d].length - targets[d];
+            const toAdd = Math.min(diff, available);
+            targets[d] += toAdd;
+            diff -= toAdd;
+          }
+          if (diff > 0) {
+            n -= diff;
+          }
+        } else if (diff < 0) {
+          for (let i = 0; i < sortedDomains.length && diff < 0; i++) {
+            const d = sortedDomains[i];
+            const toRemove = Math.min(-diff, targets[d]);
+            targets[d] -= toRemove;
+            diff += toRemove;
+          }
+        }
+      }
+
+      selectedList.forEach(d => {
+        finalQuestions.push(...poolByDomain[d].slice(0, targets[d]));
+      });
+
+      shuffle(finalQuestions);
+    }
+
     state.sim = { id: "personalizado", nome: "Simulado Personalizado", dom: "custom" };
-    state.Q = reindex(shuffle(matches.slice()).slice(0, n));
+    state.Q = reindex(finalQuestions);
     state.i = 0; state.picks = {}; state.revealed = {}; state.flags = new Set(); state.done = false; state.sel = null; state.t0 = Date.now();
     state.view = "exam"; startTimer(); render(); window.scrollTo({ top: 0, behavior: "smooth" });
   }

@@ -1,4 +1,3 @@
-# ⚠️ Está um pouco bagunçado/misturado. Em breve será corrigido!
 
 # ☁️ Guia de Estudos: AZ-900
 
